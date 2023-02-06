@@ -1,13 +1,26 @@
 const mineflayer = require('mineflayer')
 const pathfinder = require('mineflayer-pathfinder').pathfinder
-const collectblock = require('mineflayer-collectblock').plugin
+const autoeat = require('mineflayer-auto-eat')
 const Movements = require('mineflayer-pathfinder').Movements
 const { GoalNear } = require('mineflayer-pathfinder').goals
-const bot = mineflayer.createBot({ host:'', port:'', username: 'BotAlexa_' })
+
+if (process.argv.length < 4 || process.argv.length > 6) {
+  console.log('Usage : node index.js <host> <port> [<name>] [<password>]')
+  process.exit(1)
+}
+
+const bot = mineflayer.createBot({
+  host: process.argv[2],
+  port: process.argv[3],
+  username: process.argv[4],
+  password: process.argv[5]
+})
+
 
 var stopFight = true
 
 bot.loadPlugin(pathfinder)
+bot.loadPlugin(autoeat)
 
 bot.once('spawn', () => {
 
@@ -71,3 +84,27 @@ bot.once('spawn', () => {
       
     }, 100);    
   });
+
+  bot.on('spawn', () => {
+    const totemId = bot.registry.itemsByName.totem_of_undying.id // Get the correct id
+    if (bot.registry.itemsByName.totem_of_undying) {
+      setInterval(() => {
+        const totem = bot.inventory.findInventoryItem(totemId, null)
+        if (totem) {
+          bot.equip(totem, 'off-hand')
+        }
+      }, 50)
+    }
+  })
+
+  bot.once('spawn', () => {
+    bot.autoEat.options = {
+      priority: 'foodPoints',
+      startAt: 14,
+      bannedFood: []
+    }
+  })
+  bot.on('health', () => {
+    if (bot.food === 20) bot.autoEat.disable()
+    else bot.autoEat.enable()
+  })
