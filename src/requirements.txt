@@ -1,3 +1,4 @@
 minecraft-data
 mineflayer
 mineflayer-pathfinder
+mineflayer-auto-eat
